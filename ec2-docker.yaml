@@ -1,0 +1,66 @@
+# Created for the Silver Spring Docker and Container Group and Silver Spring Cloud computing and AWS Meetup Group Demo
+# Author: Saurav Sharma
+
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy a simple Amazon Linux Instance and allow SSH connectivity.
+Parameters:
+  KeyName:
+    Description: EC2 Key Pair for SSH Access, you must have created these prior to
+      running this.
+    Type: AWS::EC2::KeyPair::KeyName
+  VpcId:
+    Description: 'Insert one of your VPC ID. you can find this info in the
+      VPC console '
+    Type: AWS::EC2::VPC::Id
+Resources:
+  # EC2 Instance which will host the Demo Docker Container
+  SimpleInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64:
+          !Sub |
+              #!/bin/bash -xe
+              #!/bin/bash
+              sudo yum update -y
+
+              sudo amazon-linux-extras install docker
+              sudo service docker start
+              sudo usermod -a -G docker ec2-user
+              docker info
+              git clone https://github.com/silver-spring-cloud-computing-meetup/aug-2019-meetup-files
+              cd aug-2019-meetup-files
+              docker build -t meetup-demo-image .
+              docker run -d -p 80:80 meetup-demo-image
+      KeyName:
+        Ref: KeyName
+      InstanceType: t2.micro
+      ImageId: ami-0b898040803850657 # Amazon Linux 2 AMI
+      NetworkInterfaces:
+      - GroupSet:
+        - Ref: SimpleInstanceSg
+        AssociatePublicIpAddress: true
+        DeviceIndex: '0'
+        DeleteOnTermination: true
+      Tags:
+      -
+        Key: "Name"
+        Value: "Docker-Demo-Meetup"
+
+  # Security Group to be used with the EC2 instance
+  SimpleInstanceSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH access via port 22
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
