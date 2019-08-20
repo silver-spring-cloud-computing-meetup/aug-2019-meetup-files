@@ -29,8 +29,8 @@ Resources:
               sudo service docker start
               sudo usermod -a -G docker ec2-user
               docker info
-              git clone https://github.com/silver-spring-cloud-computing-meetup/aug-2019-meetup-files
-              cd aug-2019-meetup-files
+              git clone https://github.com/silver-spring-cloud-computing-meetup/aug-2019-meetup-files/
+              cd aug-2019-meetup-files/docker-demo-with-cloudformation
               docker build -t meetup-demo-image .
               docker run -d -p 80:80 meetup-demo-image
       KeyName:
